@@ -1,74 +1,47 @@
 const Discord = require("discord.js");
-const language = require("./lang-list");
-const translate = require("google-translate-api");
-const speech = require("./error");
-const config = require("./config.json");
+const config = require("./config/config.json");
 
 const client = new Discord.Client();
+
 const prefix = "!";
 
-client.on("ready", () => {
-  console.log("The bot is ready.");
-});
+client.on("message", function (message) {
+  if (message.author.bot) return;
+  if (!message.content.startsWith(prefix)) return;
 
-client.on("message", (message) => {
-  const args = message.content.slice(prefix.length).trim().split(/ +/g);
+  const commandBody = message.content.slice(prefix.length);
+  const args = commandBody.split(" ");
   const command = args.shift().toLowerCase();
 
-  // It can be a regular ! message. This says to not bother if it doesn't have a prefix, and
-  // to not trigger if a bot gives a command.
-  if (!message.content.startsWith(prefix) || message.author.bot) {
-    return;
-  }
-
-  // Auto-translates the text into the command's language like !japanese, or !french
-  if (language.some((ele) => ele.name === command)) {
-    if (args.length === 0) {
-      message.reply(speech.FULLNAME_AUTO_ERROR);
-    } else {
-      let lang_to = language.filter((ele) => ele.name === command)[0].abrv;
-      let text = args.slice(0).join(" ");
-      translate(text, { to: lang_to })
-        .then((res) => message.channel.send(res.text))
-        .catch((err) => message.channel.send(speech.TRANSLATION_ERROR + err));
-    }
-  }
-
-  // Auto translates with abbreviation like !ko, !en, or !de
-  if (language.some((ele) => ele.abrv === command)) {
-    if (args.length === 0) {
-      message.reply(speech.ABBR_AUTO_ERROR);
-    } else {
-      let lang_to = language.filter((ele) => ele.abrv === command)[0].abrv;
-      let text = args.slice(0).join(" ");
-      translate(text, { to: lang_to })
-        .then((res) => message.channel.send(res.text))
-        .catch((err) => message.channel.send(speech.TRANSLATION_ERROR + err));
-    }
-  }
-
-  // Specifies the text's language and translates it into a specific language
-  if (command === "translate") {
-    if (args.length < 3) {
-      message.reply(speech.TRANS_SPECIFIC_ERROR);
-    } else {
-      let argFrom = args[0].toLowerCase();
-      let argTo = args[1].toLowerCase();
-
-      let lang_from = language.filter((ele) => ele.name === argFrom)[0].abrv;
-      let lang_to = language.filter((ele) => ele.name === argTo)[0].abrv;
-      let text = args.slice(2).join(" ");
-
-      translate(text, { from: lang_from, to: lang_to })
-        .then((res) => message.channel.send(res.text))
-        .catch((err) => console.log(speech.TRANSLATION_ERROR + err));
-    }
-  }
-
   if (command === "commands") {
-    message.channel.send(speech.COMMANDS_HELP);
+    message.reply(
+      `You can sum=add numbers, sub=subtract number, mul=multiplie numbers, div=division number, rem=remainder of number`
+    );
+  } else if (command === "sum") {
+    const numArgs = args.map((x) => parseFloat(x));
+    const sum = numArgs.reduce((counter, x) => (counter += x));
+    message.reply(`The Addition of all the arguments you provided is ${sum}!`);
+  } else if (command === "sub") {
+    const numArgs = args.map((x) => parseFloat(x));
+    const sub = numArgs.reduce((counter, x) => (counter -= x));
+    message.reply(
+      `The subtraction of all the arguments you provided is ${sub}!`
+    );
+  } else if (command === "mul") {
+    const numArgs = args.map((x) => parseFloat(x));
+    const mul = numArgs.reduce((counter, x) => (counter *= x));
+    message.reply(
+      `The tiplication of all the arguments you provided is ${mul}!`
+    );
+  } else if (command === "div") {
+    const numArgs = args.map((x) => parseFloat(x));
+    const duv = numArgs.reduce((counter, x) => (counter /= x));
+    message.reply(`The division of all the arguments you provided is ${duv}!`);
+  } else if (command === "rem") {
+    const numArgs = args.map((x) => parseFloat(x));
+    const rem = numArgs.reduce((counter, x) => (counter %= x));
+    message.reply(`The remainder of all the arguments you provided is ${rem}!`);
   }
 });
 
 client.login(config.BOT_TOKEN);
-// ref: https://github.com/Eritz/discord-translation-bot
